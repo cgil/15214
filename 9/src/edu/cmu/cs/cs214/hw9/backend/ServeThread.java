@@ -21,19 +21,21 @@ public class ServeThread extends Thread {
 	private final Map<String, Integer> userTable;
 	private final int serverID;
 	private final Cache cache;
+	private final Socket s;
 	/**
 	 * Creates a serverThread to handle requests to register or unregister
 	 * @param in The stream from the client
 	 * @param out The stream back to the client
 	 * @param b The database 
 	 */
-	public ServeThread(InputStream in, OutputStream out, Backend b, Map<String, Integer> userTable, int id, Cache c) {
+	public ServeThread(InputStream in, OutputStream out, Backend b, Map<String, Integer> userTable, int id, Cache c, Socket s) {
 		reader = new BufferedReader(new InputStreamReader(in));
 		socketWriter = new PrintWriter(out, true);
 		db = b;
 		this.userTable = userTable;
 		serverID = id;
 		this.cache = c;
+		this.s = s;
 	}
 	
 	/** Reads one line at a time and transfers to the writer */
@@ -55,6 +57,7 @@ public class ServeThread extends Thread {
 			cache.cacheRequest(line, response);
 			
 			socketWriter.print(response);
+			s.close();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -259,7 +262,7 @@ public class ServeThread extends Thread {
 		User u = db.getUser(email);
 		String name = u.getFullname();
 		String pwd = u.getPassword();
-		for (int i = 0; i < ServerConstants.getServerlist().length; i++) {
+		for (int i = 0; i < ServerConstants.serverList.length; i++) {
 			//don't need to notify self
 			if (i == serverID) continue;
 			
@@ -277,7 +280,7 @@ public class ServeThread extends Thread {
 	 */
 	private void forwardRequestToServer(int destID, String request, Writer responseWriter) {
 		try {
-			Socket requestSock = new Socket(ServerConstants.getServerlist()[destID], ServerConstants.servePort + destID);
+			Socket requestSock = new Socket(ServerConstants.serverList[destID], ServerConstants.servePort + destID);
 			PrintWriter w = new PrintWriter(requestSock.getOutputStream(), true);
 			BufferedReader r = new BufferedReader(new InputStreamReader(requestSock.getInputStream()));
 			w.println(request);
