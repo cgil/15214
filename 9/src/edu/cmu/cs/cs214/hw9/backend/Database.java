@@ -13,7 +13,7 @@ public class Database implements Backend{
 	private HashMap<User, ArrayList<Status>> statusStorage = new HashMap<User, ArrayList<Status>>();
 	private HashMap<User, ArrayList<User>> friendStorage = new HashMap<User, ArrayList<User>>();
 	private HashMap<User, ArrayList<User>> requestStorage = new HashMap<User, ArrayList<User>>();
-	private class StatusCompare implements Comparator<Status>{
+	public class StatusCompare implements Comparator<Status>{
 
 		@Override
 		public int compare(Status a, Status b) {
