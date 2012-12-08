@@ -259,7 +259,7 @@ public class ServeThread extends Thread {
 		User u = db.getUser(email);
 		String name = u.getFullname();
 		String pwd = u.getPassword();
-		for (int i = 0; i < ServerConstants.serverList.length; i++) {
+		for (int i = 0; i < ServerConstants.getServerlist().length; i++) {
 			//don't need to notify self
 			if (i == serverID) continue;
 			
@@ -277,7 +277,7 @@ public class ServeThread extends Thread {
 	 */
 	private void forwardRequestToServer(int destID, String request, Writer responseWriter) {
 		try {
-			Socket requestSock = new Socket(ServerConstants.serverList[destID], ServerConstants.servePort + destID);
+			Socket requestSock = new Socket(ServerConstants.getServerlist()[destID], ServerConstants.servePort + destID);
 			PrintWriter w = new PrintWriter(requestSock.getOutputStream(), true);
 			BufferedReader r = new BufferedReader(new InputStreamReader(requestSock.getInputStream()));
 			w.println(request);
