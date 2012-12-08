@@ -13,10 +13,13 @@ public class Server extends Thread {
 	Map<String, Integer> userTable;
 	ServerSocket sSock;
 	final int id;
+	Cache c;
 	
 	public Server(int id) {
 		this.id = id;
 		userTable = new HashMap<String, Integer>();
+		c = new Cache();
+		
 		try {
 			sSock = new ServerSocket(ServerConstants.getServerPort() + id);
 		} catch (IOException e) {
@@ -29,7 +32,8 @@ public class Server extends Thread {
 		while (serverOn) {
 			try {
 				Socket sock = sSock.accept();
-				ServeThread t = new ServeThread(sock.getInputStream(), sock.getOutputStream(), localStorage, userTable, id);
+				
+				ServeThread t = new ServeThread(sock.getInputStream(), sock.getOutputStream(), localStorage, userTable, id, c);
 				t.run();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

@@ -11,191 +11,244 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.text.DateFormatter;
 
-import edu.cmu.cs.cs214.hw9.backend.Database.StatusCompare;
 
 public class ServeThread extends Thread {
 	private final BufferedReader reader;
-	private final PrintWriter writer;
+	private PrintWriter writer;
+	private final PrintWriter socketWriter;
 	private final Backend db;
 	private final Map<String, Integer> userTable;
 	private final int serverID;
+	private final Cache cache;
 	/**
 	 * Creates a serverThread to handle requests to register or unregister
 	 * @param in The stream from the client
 	 * @param out The stream back to the client
 	 * @param b The database 
 	 */
-	public ServeThread(InputStream in, OutputStream out, Backend b, Map<String, Integer> userTable, int id) {
+	public ServeThread(InputStream in, OutputStream out, Backend b, Map<String, Integer> userTable, int id, Cache c) {
 		reader = new BufferedReader(new InputStreamReader(in));
-		writer = new PrintWriter(out, true);
+		socketWriter = new PrintWriter(out, true);
 		db = b;
 		this.userTable = userTable;
 		serverID = id;
+		this.cache = c;
 	}
 	
 	/** Reads one line at a time and transfers to the writer */
 	public void run() {
 		try {
 			String line = reader.readLine();
-			
-			String[] args = line.split(" ");
-			String requestType = args[0];
-			String email = args[1];
-			
-			//First handle requests that deal with adding new users to the userTable
-			if (requestType.equals("REGISTER")) {
-				//REGISTER (email) (username) (password)
-				if (args.length != 4) {
-					returnError("BAD_ARGUMENTS");
-					return;
-				}
-				if (userTable.get(args[1]) != null) {
-					returnError("USER_ALREADY_REGISTERED");
-					return;
-				}
-				
-				String name = args[2];
-				String password = args[3];
-				//register the user on this server
-				db.register(new User(email, name, password));
-				userTable.put(email, serverID);
-				updateUserTables(email);
-				return;
-			}
-			else if (requestType.equals("NEW_USER")) {
-				//NEW_USER (email) (fullName) (password) (serverID)
-				
-				db.register(new User(email, args[2], args[3]));
-				int serverID = Integer.parseInt(args[2]);
-				userTable.put(email, serverID);
-				return;
-			}
-			
-			//Now check if the data requested is stored locally
-			if (userTable.get(email) == null) {
-				returnError("UNKNOWN_USER");
-				return;
-			}
-			
-			int locationID = userTable.get(email);
-			if (locationID != serverID) {
-				forwardRequestToServer(locationID, line, writer);
-				return;
-			}
-			
-			//The data must be local at this point
-			if (requestType.equals("UPDATE_STATUS")) {
-				//UPDATE_STATUS (email) (status)
-				User u = db.getUser(email);
-				String status = args[2];
-				//need to recombine the split status
-				for (int i = 3; i < args.length; i++) {
-					status = status + " " + args[i];
-				}
-				
-				db.storeStatus(new Status(status, u, new Date()));
-				writer.println("OK");
-				return;
-			}
-			else if (requestType.equals("ADD_FRIEND")) {
-				//ADD_FRIEND (requester email) (other email) (CLIENT/SERVER)
-				User u = db.getUser(email);
-				User u2 = new User(args[2]);
-				
-				if (args[3].equals("CLIENT")) {
-					//make sure the friend link is added to the other server as well
-					forwardRequestToServer(userTable.get(args[2]), "ADD_FRIEND " + args[2] + " " + email + "SERVER", new StringWriter());
-				}
-				
-				db.storeFriend(u, u2);
-				writer.println("OK");
-				return;
-			}
-			else if (requestType.equals("REMOVE_FRIEND")) {
-				//REMOVE_FRIEND (email1) (email2) (CLIENT/SERVER)
-				User u = db.getUser(email);
-				User u2 = new User(args[2]);
+			StringWriter responseHolder = new StringWriter();
+			writer = new PrintWriter(responseHolder);
 
-				if (args[3].equals("CLIENT")) {
-					//make sure the friend link is removed from the other server as well
-					forwardRequestToServer(userTable.get(args[2]), "REMOVE_FRIEND " + args[2] + " " + email + "SERVER", new StringWriter());
-				}
-				
-				db.removeFriend(u, u2);
-				writer.println("OK");
+			if (cache.requestInCache(line)) {
+				socketWriter.println(cache.getResponseForRequest(line));
 				return;
 			}
-			else if (requestType.equals("LOGIN")) {
-				//LOGIN (email) (password)
-				String pwd = args[2];
-				if (db.login(email, pwd)) {
-					writer.println("OK");
-				}
-				else {
-					returnError("BAD_LOGIN");
-				}
-				return;
-			}
-			else if (requestType.equals("GET_USER_INFO")) {
-				//GET_USER_INFO (email)
-				User u = db.getUser(email);
-				writer.println("OK " + u.getEmail() + u.getFullname());
-				return;
-			}
-			else if (requestType.equals("GET_STATUSES")) {
-				//GET_STATUSES (email)
-				User u = db.getUser(email);
-				List<Status> statuses = db.getStatuses(u);
-				for (Status s : statuses) {
-					writer.println(s.getPoster().getEmail() + " " + s.getMessage() + " " + s.getTimestamp().toString());
-				}
-				return;
-			}
-			else if (requestType.equals("GET_FRIEND_UPDATES")) {
-				//GET_FRIEND_UPDATES (email)
-				User u = db.getUser(email);
-				List<User> friends = db.getFriends(u);
-				List<Status> allStatuses = new ArrayList<Status>(10);
-				for (User f : friends) {
-					String fEmail = f.getEmail();
-					int friendLocationID = userTable.get(fEmail);
-					if (friendLocationID == serverID) {
-						allStatuses.addAll(db.getStatuses(db.getUser(fEmail)));
-					}
-					else {
-						allStatuses.addAll(getStatusesForUser(fEmail, friendLocationID));
-					}
-				}
-				
-				Collections.sort(allStatuses,((Database)db).new StatusCompare());
-				
-				if(allStatuses.size() > 10){
-					List<Status> statArray = new ArrayList<Status>();
-					for(int i = 0; i < 10; i ++){
-						statArray.add(allStatuses.get(i));
-					}
-					allStatuses = statArray;
-				}
-				
-				for (Status s : allStatuses) {
-					writer.println(s.getPoster().getEmail() + "____" + s.getMessage() + "____" + s.getTimestamp().toString());
-				}
-				return;
-			}
+			
+			handleRequest(line);
+			
+			writer.flush();
+			String response = responseHolder.toString();
+			cache.cacheRequest(line, response);
+			
+			socketWriter.print(response);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}	
 	}
 	
-	/**
-	 * Writes the given error message to the output stream
-	 * @param error The error string to return
-	 */
-	private void returnError(String error) {
-		writer.println("ERROR " + error);
+	private void handleRequest(String line) {
+		String[] args = line.split(" ");
+		String requestType = args[0];
+		String email = args[1];
+		
+		//First handle requests that deal with adding new users to the userTable
+		if (requestType.equals("REGISTER")) {
+			//REGISTER (email) (username) (password)
+			if (args.length != 4) {
+				writer.println("ERROR BAD_ARGUMENTS");
+				return;
+			}
+			if (userTable.get(args[1]) != null) {
+				writer.println("ERROR USER_ALREADY_REGISTERED");
+				return;
+			}
+			
+			String name = args[2];
+			String password = args[3];
+			//register the user on this server
+			db.register(new User(email, name, password));
+			userTable.put(email, serverID);
+			updateUserTables(email);
+			return;
+		}
+		else if (requestType.equals("NEW_USER")) {
+			//NEW_USER (email) (fullName) (password) (serverID)
+			
+			db.register(new User(email, args[2], args[3]));
+			int serverID = Integer.parseInt(args[2]);
+			userTable.put(email, serverID);
+			return;
+		}
+		
+		//Now check if the data requested is stored locally
+		if (userTable.get(email) == null) {
+			writer.println("ERROR UNKNOWN_USER");
+			return;
+		}
+		
+		int locationID = userTable.get(email);
+		if (locationID != serverID) {
+			forwardRequestToServer(locationID, line, writer);
+			return;
+		}
+		
+		//The data must be local at this point
+		if (requestType.equals("UPDATE_STATUS")) {
+			//UPDATE_STATUS (email) (status)
+			User u = db.getUser(email);
+			String status = args[2];
+			//need to recombine the split status
+			for (int i = 3; i < args.length; i++) {
+				status = status + " " + args[i];
+			}
+			
+			db.storeStatus(new Status(status, u, new Date()));
+			writer.println("OK");
+			return;
+		}
+		else if (requestType.equals("REQUEST_FRIEND")) {
+			//REQUEST_FRIEND (requestee email) (requester email)
+			User u = db.getUser(email);
+			User u2 = new User(args[2]);
+			
+			int requesterID = userTable.get(u2.getEmail());
+			StringWriter responseWriter = new StringWriter();
+			forwardRequestToServer(requesterID, "PENDING_FRIEND_REQUEST " + u2.getEmail() + " " + u.getEmail(), responseWriter);
+			
+			String response = responseWriter.toString();
+			if (response.equals("YES")) {
+				//request has been made so just add them as friends
+				db.storeFriend(u, u2);
+				forwardRequestToServer(requesterID, "ADD_FRIEND " + u2.getEmail() + " " + u.getEmail(), new StringWriter());
+			}
+			else {
+				List<User> requests = db.getFriendRequests(u);
+				requests.add(u2);
+			}
+			writer.println("OK");
+			return;
+		}
+		else if (requestType.equals("ADD_FRIEND")) {
+			//ADD_FRIEND (requestee email) (requester email)
+			User u = db.getUser(email);
+			User u2 = new User(args[2]);
+			
+			List<User> requests = db.getFriendRequests(u);
+			requests.remove(u2);
+			
+			db.storeFriend(u, u2);
+			
+			writer.println("OK");
+			return;
+		}
+		else if (requestType.equals("REMOVE_FRIEND")) {
+			//REMOVE_FRIEND (email1) (email2) (CLIENT/SERVER)
+			User u = db.getUser(email);
+			User u2 = new User(args[2]);
+
+			if (args[3].equals("CLIENT")) {
+				//make sure the friend link is removed from the other server as well
+				forwardRequestToServer(userTable.get(args[2]), "REMOVE_FRIEND " + args[2] + " " + email + "SERVER", new StringWriter());
+			}
+			
+			db.removeFriend(u, u2);
+			writer.println("OK");
+			return;
+		}
+		else if (requestType.equals("LOGIN")) {
+			//LOGIN (email) (password)
+			String pwd = args[2];
+			if (db.login(email, pwd)) {
+				writer.println("OK");
+			}
+			else {
+				writer.println("ERROR BAD_LOGIN");
+			}
+			return;
+		}
+		else if (requestType.equals("PENDING_FRIEND_REQUEST")) {
+			//PENDING_FRIEND_REQUEST (email1) (email2)
+			User u = db.getUser(email);
+			User u2 = new User(args[2]);
+			if (db.getFriendRequests(u).contains(u2)) {
+				writer.println("YES");
+			}
+			else {
+				writer.println("NO");
+			}
+			return;
+		}
+		else if (requestType.equals("GET_USER_INFO")) {
+			//GET_USER_INFO (email)
+			User u = db.getUser(email);
+			writer.println("OK " + u.getEmail() + u.getFullname());
+			return;
+		}
+		else if (requestType.equals("GET_STATUSES")) {
+			//GET_STATUSES (email)
+			User u = db.getUser(email);
+			List<Status> statuses = db.getStatuses(u);
+			for (Status s : statuses) {
+				writer.println(s.getPoster().getEmail() + "____" + s.getMessage() + "____" + s.getTimestamp().toString());
+			}
+			return;
+		}
+		else if (requestType.equals("GET_FRIEND_REQUESTS")) {
+			//GET_FRIEND_REQUESTS (email)
+			User u = db.getUser(email);
+			List<User> requests = db.getFriendRequests(u);
+			
+			for (User requester : requests) {
+				writer.println(requester.getEmail());
+			}
+			return;
+		}
+		else if (requestType.equals("GET_FRIEND_UPDATES")) {
+			//GET_FRIEND_UPDATES (email)
+			User u = db.getUser(email);
+			List<User> friends = db.getFriends(u);
+			List<Status> allStatuses = new ArrayList<Status>(10);
+			for (User f : friends) {
+				String fEmail = f.getEmail();
+				int friendLocationID = userTable.get(fEmail);
+				if (friendLocationID == serverID) {
+					allStatuses.addAll(db.getStatuses(db.getUser(fEmail)));
+				}
+				else {
+					allStatuses.addAll(getStatusesForUser(fEmail, friendLocationID));
+				}
+			}
+			
+			Collections.sort(allStatuses,((Database)db).new StatusCompare());
+			
+			if(allStatuses.size() > 10){
+				List<Status> statArray = new ArrayList<Status>();
+				for(int i = 0; i < 10; i ++){
+					statArray.add(allStatuses.get(i));
+				}
+				allStatuses = statArray;
+			}
+			
+			for (Status s : allStatuses) {
+				writer.println(s.getPoster().getEmail() + "____" + s.getMessage() + "____" + s.getTimestamp().toString());
+			}
+			return;
+		}
 	}
 	
 	/**
