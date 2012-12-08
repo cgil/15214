@@ -18,7 +18,7 @@ public class Server extends Thread {
 		this.id = id;
 		userTable = new HashMap<String, Integer>();
 		try {
-			sSock = new ServerSocket(ServerConstants.servePort + id);
+			sSock = new ServerSocket(ServerConstants.getServerPort() + id);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -38,6 +38,16 @@ public class Server extends Thread {
 			
 		}
 		
+	}
+	
+	//Main method
+	public static void main(String[] args) {
+		
+		for (int i = 0; i < ServerConstants.getServerlist().length; i ++) {
+			Server server = new Server(i);
+			server.run();
+		}
+	
 	}
 	
 
