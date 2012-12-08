@@ -11,10 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.text.DateFormatter;
-
-import edu.cmu.cs.cs214.hw9.backend.Database.StatusCompare;
-
 public class ServeThread extends Thread {
 	private final BufferedReader reader;
 	private final PrintWriter writer;
@@ -99,17 +95,38 @@ public class ServeThread extends Thread {
 				writer.println("OK");
 				return;
 			}
-			else if (requestType.equals("ADD_FRIEND")) {
-				//ADD_FRIEND (requester email) (other email) (CLIENT/SERVER)
+			else if (requestType.equals("REQUEST_FRIEND")) {
+				//REQUEST_FRIEND (requestee email) (requester email)
 				User u = db.getUser(email);
 				User u2 = new User(args[2]);
 				
-				if (args[3].equals("CLIENT")) {
-					//make sure the friend link is added to the other server as well
-					forwardRequestToServer(userTable.get(args[2]), "ADD_FRIEND " + args[2] + " " + email + "SERVER", new StringWriter());
+				int requesterID = userTable.get(u2.getEmail());
+				StringWriter responseWriter = new StringWriter();
+				forwardRequestToServer(requesterID, "PENDING_FRIEND_REQUEST " + u2.getEmail() + " " + u.getEmail(), responseWriter);
+				
+				String response = responseWriter.toString();
+				if (response.equals("YES")) {
+					//request has been made so just add them as friends
+					db.storeFriend(u, u2);
+					forwardRequestToServer(requesterID, "ADD_FRIEND " + u2.getEmail() + " " + u.getEmail(), new StringWriter());
 				}
+				else {
+					List<User> requests = db.getFriendRequests(u);
+					requests.add(u2);
+				}
+				writer.println("OK");
+				return;
+			}
+			else if (requestType.equals("ADD_FRIEND")) {
+				//ADD_FRIEND (requestee email) (requester email)
+				User u = db.getUser(email);
+				User u2 = new User(args[2]);
+				
+				List<User> requests = db.getFriendRequests(u);
+				requests.remove(u2);
 				
 				db.storeFriend(u, u2);
+				
 				writer.println("OK");
 				return;
 			}
@@ -138,6 +155,18 @@ public class ServeThread extends Thread {
 				}
 				return;
 			}
+			else if (requestType.equals("PENDING_FRIEND_REQUEST")) {
+				//PENDING_FRIEND_REQUEST (email1) (email2)
+				User u = db.getUser(email);
+				User u2 = new User(args[2]);
+				if (db.getFriendRequests(u).contains(u2)) {
+					writer.println("YES");
+				}
+				else {
+					writer.println("NO");
+				}
+				return;
+			}
 			else if (requestType.equals("GET_USER_INFO")) {
 				//GET_USER_INFO (email)
 				User u = db.getUser(email);
@@ -150,6 +179,16 @@ public class ServeThread extends Thread {
 				List<Status> statuses = db.getStatuses(u);
 				for (Status s : statuses) {
 					writer.println(s.getPoster().getEmail() + " " + s.getMessage() + " " + s.getTimestamp().toString());
+				}
+				return;
+			}
+			else if (requestType.equals("GET_FRIEND_REQUESTS")) {
+				//GET_FRIEND_REQUESTS (email)
+				User u = db.getUser(email);
+				List<User> requests = db.getFriendRequests(u);
+				
+				for (User requester : requests) {
+					writer.println(requester.getEmail());
 				}
 				return;
 			}
