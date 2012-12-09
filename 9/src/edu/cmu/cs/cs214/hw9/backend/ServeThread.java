@@ -87,6 +87,8 @@ public class ServeThread extends Thread {
 			db.register(new User(email, name, password));
 			userTable.put(email, serverID);
 			updateUserTables(email);
+			
+			writer.println("OK");
 			return;
 		}
 		else if (requestType.equals("NEW_USER")) {
@@ -95,6 +97,7 @@ public class ServeThread extends Thread {
 			db.register(new User(email, args[2], args[3]));
 			int serverID = Integer.parseInt(args[2]);
 			userTable.put(email, serverID);
+			writer.println("OK");
 			return;
 		}
 		
