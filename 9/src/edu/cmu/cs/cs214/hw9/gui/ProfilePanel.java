@@ -78,14 +78,14 @@ public class ProfilePanel extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					// TODO FILL IN CODE TO ADD/REMOVE FRIEND
-					/*ClientHandler ch = new ClientHandler();
+					ClientHandler ch = new ClientHandler();
 					ch.addFriend(emailUser, emailName);
 					if(ch.areFriends(emailUser,emailName)) {
 						ch.removeFriend(emailUser, emailName);
 					}
 					else {
 						ch.addFriend(emailUser, emailName);
-					}*/
+					}
 				}
 				
 			});
