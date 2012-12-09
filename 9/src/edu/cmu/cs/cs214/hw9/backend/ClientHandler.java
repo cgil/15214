@@ -15,6 +15,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+ * This class abstracts the client and server interaction
+ * @author Carlos Gil
+ * @author Nick Zukoski
+ *
+ */
 public class ClientHandler {
 	
 	private int serverPort;
@@ -29,6 +35,13 @@ public class ClientHandler {
 		chooseServer();
 	}
 	
+	/**
+	 * Register a new user
+	 * @param email : user email
+	 * @param name : user name
+	 * @param password : user password
+	 * @return boolean is registered
+	 */
 	public boolean register(String email, String name, String password) {
 		openConnection();
 		String requestType = "REGISTER";
@@ -45,6 +58,12 @@ public class ClientHandler {
 		
 	}
 	
+	/**
+	 * Get update statuses
+	 * @param email : email of user
+	 * @param status : status to update
+	 * @return updating status was successful 
+	 */
 	public boolean updateStatus(String email, String status) {
 		openConnection();
 		String requestType = "UPDATE_STATUS";
@@ -60,6 +79,12 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Request a new friend
+	 * @param email1: first users email
+	 * @param email2: second users email
+	 * @return if the two users were made friends
+	 */
 	public boolean requestFriend(String email1, String email2) {
 		openConnection();
 		String requestType = "REQUEST_FRIEND";
@@ -75,6 +100,12 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Add a new friend
+	 * @param requesterEmail: person requesting the email
+	 * @param requesteeEmail: person to friend
+	 * @return if they were friended
+	 */
 	public boolean addFriend(String requesterEmail, String requesteeEmail) {
 		openConnection();
 		String requestType = "ADD_FRIEND";
@@ -90,6 +121,12 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Remove a friend
+	 * @param requesterEmail: user requesting to remove a friend
+	 * @param requesteeEmail: user to be removed
+	 * @return if they were made friends
+	 */
 	public boolean removeFriend(String requesterEmail, String requesteeEmail) {
 		openConnection();
 		String requestType = "REMOVE_FRIEND";
@@ -105,6 +142,12 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Are two users friends
+	 * @param email1: first users email
+	 * @param email2: second users email
+	 * @return if they are friends
+	 */
 	public boolean areFriends(String email1, String email2) {
 		openConnection();
 		String requestType = "ARE_FRIENDS";
@@ -120,6 +163,12 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Log a user in
+	 * @param email: users email
+	 * @param password: users password
+	 * @return if the users can be logged in
+	 */
 	public boolean login(String email, String password) {
 		openConnection();
 		String requestType = "LOGIN";
@@ -135,6 +184,12 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Get list of pending friend requests
+	 * @param email1: first user asking for requests
+	 * @param email2: request from second user
+	 * @return if there is a pending friend request
+	 */
 	public boolean pendingFriendRequests(String email1, String email2) {
 		openConnection();
 		String requestType = "PENDING_FRIEND_REQUEST";
@@ -150,6 +205,11 @@ public class ClientHandler {
 		}
 	}
 	
+	/**
+	 * Get the users information
+	 * @param email: user to get information's email
+	 * @return full name of user
+	 */
 	public String getUserInfo(String email) {
 		openConnection();
 		String requestType = "GET_USER_INFO";
@@ -184,6 +244,11 @@ public class ClientHandler {
 		return fullName;
 	}
 	
+	/**
+	 * Get the users statuses
+	 * @param email: the users email
+	 * @return the list of statuses for this user
+	 */
 	public ArrayList<Status> getStatuses(String email) {
 		openConnection();
 		String requestType = "GET_STATUSES";
@@ -217,7 +282,11 @@ public class ClientHandler {
 	}
 	
 	
-	
+	/**
+	 * Get all the friend requests for this user
+	 * @param email: email of user to get friend requests
+	 * @return list of friend requests
+	 */
 	public ArrayList<User> getFriendRequests(String email) {
 		openConnection();
 		String requestType = "GET_FRIEND_REQUESTS";
@@ -245,6 +314,11 @@ public class ClientHandler {
 		return userList;
 	}
 	
+	/**
+	 * get a users friends
+	 * @param email: email of user to get friends
+	 * @return a list of the users friends
+	 */
 	public ArrayList<User> getFriends(String email) {
 		openConnection();
 		String requestType = "GET_FRIENDS";
@@ -272,6 +346,11 @@ public class ClientHandler {
 		return userList;
 	}
 	
+	/**
+	 * Get friends updates
+	 * @param email: email of user to get friends updates
+	 * @return list of status updates for user
+	 */
 	public ArrayList<Status> getFriendUpdates(String email) {
 		openConnection();
 		String requestType = "GET_FRIEND_UPDATES";
@@ -307,13 +386,22 @@ public class ClientHandler {
 		return statusList;
 	}
 
-	
+	/**
+	 * Parse the message passed in
+	 * @param message: message to parse
+	 * @return a string array of message fields
+	 */
 	public String[] parseMessage(String message) {
 		String myDelimiter = "____";
 		String[] result = message.split(myDelimiter);  
 		return result;
 	}
 	
+	/**
+	 * Handle a simple message between servers where there is only a simple response passed back
+	 * @param request: the request to handle
+	 * @return A response from the server
+	 */
 	public String handleSimpleMessages(String request) {
 		String responseLine = "NO RESPONSE";
 		String dummyString;
@@ -330,7 +418,9 @@ public class ClientHandler {
 		
 	}
 	
-	//Open socket and read/write connection
+	/**
+	 * Open a socket connection for read and write
+	 */
 	public void openConnection() {
 		try {
 			cSocket = new Socket(InetAddress.getLocalHost(), serverPort);
@@ -357,7 +447,9 @@ public class ClientHandler {
 
 	}
 	
-	//Close socket
+	/**
+	 * Close a socket connection for read and write
+	 */
 	public void closeConnection() {
 		try{
 			reader.close();
@@ -369,14 +461,19 @@ public class ClientHandler {
 		}	
 	}
 	
-	//Send a message to the server
+	/**
+	 * Send a message to the server
+	 * @param msg: message to send
+	 */
 	public void sendMessage(String msg)
 	{
 		socketWriter.println(msg);
 		socketWriter.flush();
 	}
 	
-	//Get a server and port from the serverList 
+	/**
+	 * Choose a server randomly from a list of given servers
+	 */
 	public void chooseServer() {
 		int serverIndex = (int) (Math.random() * (ServerConstants.serverList.length));
 		serverPort = ServerConstants.servePort + serverIndex;

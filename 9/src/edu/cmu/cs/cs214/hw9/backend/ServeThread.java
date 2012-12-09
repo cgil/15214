@@ -13,8 +13,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-
-
+/**
+ * Serve a single thread
+ * @author Carlos Gil
+ * @author Nick Zukoski
+ *
+ */
 public class ServeThread extends Thread {
 	private final BufferedReader reader;
 	private PrintWriter writer;
@@ -68,6 +72,10 @@ public class ServeThread extends Thread {
 		}	
 	}
 	
+	/**
+	 * Handle a client request; speaks to the db and routes messages back to client
+	 * @param line
+	 */
 	private void handleRequest(String line) {
 		String[] args = line.split("____");
 		String requestType = args[0];

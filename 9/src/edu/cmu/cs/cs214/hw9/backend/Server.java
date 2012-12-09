@@ -6,6 +6,12 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Creates a server
+ * @author Carlos Gil
+ * @author Nick Zukoski
+ *
+ */
 public class Server extends Thread {
 
 	Backend localStorage = new Database();
