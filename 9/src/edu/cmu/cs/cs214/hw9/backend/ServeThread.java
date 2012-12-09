@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -233,6 +234,7 @@ public class ServeThread extends Thread {
 			User u = db.getUser(email);
 			List<Status> statuses = db.getStatuses(u);
 			for (Status s : statuses) {
+				String dateString = (new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")).format(s.getTimestamp());
 				writer.println(s.getPoster().getEmail() + "____" + s.getMessage() + "____" + s.getTimestamp().toString());
 			}
 			return;

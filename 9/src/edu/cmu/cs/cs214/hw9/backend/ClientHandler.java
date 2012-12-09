@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -192,7 +193,7 @@ public class ClientHandler {
 				String userEmail = args[0];
 				String message = args[1];
 				User u = new User(userEmail, getUserInfo(userEmail), "");
-				Date d = DateFormat.getInstance().parse(args[2]);
+				Date d = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy").parse(args[2]);
 				Status status = new Status(message, u, d);
 				statusList.add(status);
 
@@ -283,7 +284,7 @@ public class ClientHandler {
 				String userEmail = args[0];
 				String message = args[1];
 				User u = new User(userEmail, getUserInfo(userEmail), "");
-				Date d = DateFormat.getInstance().parse(args[2]);
+				Date d = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy").parse(args[2]);
 				Status status = new Status(message, u, d);
 				statusList.add(status);
 			
