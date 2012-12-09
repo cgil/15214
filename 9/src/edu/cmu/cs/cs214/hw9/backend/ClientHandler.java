@@ -160,13 +160,18 @@ public class ClientHandler {
 		try {
 			sendMessage(request);
 			responseLine = reader.readLine();
-			String[] args = parseMessage(responseLine);
-			System.out.println(responseLine);
-			if (args[0].equals("ERROR")) {
+			if (responseLine == null) {
 				fullName = null;
 			}
 			else {
-				fullName = args[2];
+				String[] args = parseMessage(responseLine);
+				System.out.println(responseLine);
+				if (args[0].equals("ERROR")) {
+					fullName = null;
+				}
+				else {
+					fullName = args[2];
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
