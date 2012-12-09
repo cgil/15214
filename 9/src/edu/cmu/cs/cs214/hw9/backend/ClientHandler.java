@@ -25,17 +25,6 @@ public class ClientHandler {
 	public ClientHandler() {
 		InputStream in = null;
 		OutputStream out = null;
-		try {
-			in = cSocket.getInputStream();
-			out = cSocket.getOutputStream();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		reader = new BufferedReader(new InputStreamReader(in));
-		socketWriter = new PrintWriter(out, true);
-
 		chooseServer();
 	}
 	
@@ -210,7 +199,6 @@ public class ClientHandler {
 		String requestType = "GET_FRIEND_REQUESTS";
 		String request = requestType + "____" + email;
 		
-		
 		ArrayList<User>userList = new ArrayList<User>();
 		
 		try {
@@ -243,7 +231,7 @@ public class ClientHandler {
 		try {
 			String responseLine;
 			sendMessage(request);
-			while ((responseLine = (String)in.readObject() ) != null) {
+			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
 				User u = new User(userEmail, getUserInfo(userEmail), "");
@@ -253,10 +241,7 @@ public class ClientHandler {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+		}
 		
 		closeConnection();
 		
@@ -306,9 +291,10 @@ public class ClientHandler {
 	
 	public String handleSimpleMessages(String request) {
 		String responseLine = "NO RESPONSE";
+		String dummyString;
 		try {
 			sendMessage(request);
-			while ((responseLine = reader.readLine() ) != null);
+			while ((dummyString = reader.readLine() ) != null);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

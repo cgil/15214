@@ -1,6 +1,7 @@
 package edu.cmu.cs.cs214.hw9.backend;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
@@ -292,7 +293,7 @@ public class ServeThread extends Thread {
 	 */
 	private void forwardRequestToServer(int destID, String request, Writer responseWriter) {
 		try {
-			Socket requestSock = new Socket(ServerConstants.serverList[destID], ServerConstants.servePort + destID);
+			Socket requestSock = new Socket(InetAddress.getLocalHost(), ServerConstants.servePort + destID);
 			PrintWriter w = new PrintWriter(requestSock.getOutputStream(), true);
 			BufferedReader r = new BufferedReader(new InputStreamReader(requestSock.getInputStream()));
 			w.println(request);
