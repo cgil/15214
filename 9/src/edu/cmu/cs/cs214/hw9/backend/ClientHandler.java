@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class ClientHandler {
 	
@@ -12,100 +16,276 @@ public class ClientHandler {
 	Socket cSocket;
 	ObjectOutputStream out;
  	ObjectInputStream in;
- 	String message;
 	
 	public ClientHandler(String request) {
 		
 		chooseServer();
-		message = null;
 	}
 	
-	public void register(String email, String name, String password) {
+	public boolean register(String email, String name, String password) {
 		openConnection();
 		String requestType = "REGISTER";
 		String request = requestType + "____" + email + "____" + name + "____" + password; 
-		handleMessages(request);	
+		String response = handleSimpleMessages(request);	
 		closeConnection();
+		
+		if (!response.equals("OK")) {
+			return false;
+		}
+		else {
+			return true;
+		}
 		
 	}
 	
-	public void updateStatus(String email, String status) {
+	public boolean updateStatus(String email, String status) {
 		openConnection();
 		String requestType = "UPDATE_STATUS";
 		String request = requestType + "____" + email + "____" + status;
-		handleMessages(request);
+		String response = handleSimpleMessages(request);
 		closeConnection();
+		
+		if (!response.equals("OK")) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
-	public void addFriend(String requesterEmail, String requesteeEmail) {
+	public boolean requestFriend(String email1, String email2) {
+		openConnection();
+		String requestType = "REQUEST_FRIEND";
+		String request = requestType + "____" + email1 + "____" + email2;
+		String response = handleSimpleMessages(request);
+		closeConnection();
+		
+		if (!response.equals("OK")) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	public boolean addFriend(String requesterEmail, String requesteeEmail) {
 		openConnection();
 		String requestType = "ADD_FRIEND";
 		String request = requestType + "____" + requesterEmail + "____" + requesteeEmail + "____" + "CLIENT";
-		handleMessages(request);
+		String response = handleSimpleMessages(request);
 		closeConnection();
+		
+		if (!response.equals("OK")) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
-	public void removeFriend(String requesterEmail, String requesteeEmail) {
+	public boolean removeFriend(String requesterEmail, String requesteeEmail) {
 		openConnection();
 		String requestType = "REMOVE_FRIEND";
 		String request = requestType + "____" + requesterEmail + "____" + requesteeEmail + "____" + "CLIENT";
-		handleMessages(request);
+		String response = handleSimpleMessages(request);
 		closeConnection();
+		
+		if (!response.equals("OK")) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
-	public void login(String email, String password) {
+	public boolean login(String email, String password) {
 		openConnection();
 		String requestType = "LOGIN";
 		String request = requestType + "____" + email + "____" + password;
-		handleMessages(request);
+		String response = handleSimpleMessages(request);
 		closeConnection();
+		
+		if (!response.equals("OK")) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
-	public void getUserInfo(String email) {
+	public boolean pendingFriendRequests(String email1, String email2) {
+		openConnection();
+		String requestType = "PENDING_FRIEND_REQUEST";
+		String request = requestType + "____" + email1 + "____" + email2;
+		String response = handleSimpleMessages(request);
+		closeConnection();
+		
+		if (response.equals("YES")) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	public String getUserInfo(String email) {
 		openConnection();
 		String requestType = "GET_USER_INFO";
 		String request = requestType + "____" + email;
-		handleMessages(request);
+		
+		String responseLine;
+		String fullName = "";
+		try {
+			sendMessage(request);
+			while ((responseLine = (String)in.readObject() ) != null) {
+				String[] args = parseMessage(responseLine);
+				//String responseStatus = args[0]; //OK
+				//String userEmail = args[1];
+				fullName = args[2];
+					
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		closeConnection();
+		
+		return fullName;
 	}
 	
-	public void getStatuses(String email) {
+	public ArrayList<Status> getStatuses(String email) {
 		openConnection();
 		String requestType = "GET_STATUSES";
 		String request = requestType + "____" + email;
-		handleMessages(request);
+		ArrayList<Status>statusList = new ArrayList<Status>();
+		
+		try {
+			String responseLine;
+			sendMessage(request);
+			while ((responseLine = (String)in.readObject() ) != null) {
+				String[] args = parseMessage(responseLine);
+				String userEmail = args[0];
+				String message = args[1];
+				User u = new User(userEmail);
+				Date d = DateFormat.getInstance().parse(args[2]);
+				Status status = new Status(message, u, d);
+				statusList.add(status);
+
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
 		closeConnection();
+		
+		return statusList;
 	}
 	
-	public void getFriendUpdates(String email) {
+	
+	
+	public ArrayList<User> getFriendRequests(String email) {
+		openConnection();
+		String requestType = "GET_FRIEND_REQUESTS";
+		String request = requestType + "____" + email;
+		
+		
+		ArrayList<User>userList = new ArrayList<User>();
+		
+		try {
+			String responseLine;
+			sendMessage(request);
+			while ((responseLine = (String)in.readObject() ) != null) {
+				String[] args = parseMessage(responseLine);
+				String userEmail = args[0];
+				User u = new User(userEmail);
+				
+				userList.add(u);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		closeConnection();
+		
+		return userList;
+	}
+	
+	
+	
+	
+	
+	public ArrayList<Status> getFriendUpdates(String email) {
 		openConnection();
 		String requestType = "GET_FRIEND_UPDATES";
 		String request = requestType + "____" + email;
-		handleMessages(request);
+		
+		
+		ArrayList<Status>statusList = new ArrayList<Status>();
+		
+		try {
+			String responseLine;
+			sendMessage(request);
+			while ((responseLine = (String)in.readObject() ) != null) {
+				String[] args = parseMessage(responseLine);
+				String userEmail = args[0];
+				String message = args[1];
+				User u = new User(userEmail);
+				Date d = DateFormat.getInstance().parse(args[2]);
+				Status status = new Status(message, u, d);
+				statusList.add(status);
+			
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 		closeConnection();
+		
+		return statusList;
 	}
 
 	
-	public String[] parseMessage() {
+	public String[] parseMessage(String message) {
 		String myDelimiter = "____";
 		String[] result = message.split(myDelimiter);  
 		return result;
 	}
 	
-	public void handleMessages(String request) {
-		while(message == null) {
-			
-			try {
-				message = (String)in.readObject();
-				sendMessage(request);
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	public String handleSimpleMessages(String request) {
+		String responseLine = "NO RESPONSE";
+		try {
+			sendMessage(request);
+			while ((responseLine = (String)in.readObject() ) != null);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return responseLine;
 		
 	}
 	
