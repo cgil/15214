@@ -91,6 +91,7 @@ public class FriendListPanel extends JPanel {
 				public void actionPerformed(ActionEvent e) {
 					container.replace(new ProfilePanel(fUser.getEmail(), email, a));
 				} });
+			
 			panel_1.add(link);
 		}
 		

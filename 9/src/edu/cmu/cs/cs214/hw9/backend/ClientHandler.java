@@ -145,13 +145,17 @@ public class ClientHandler {
 			sendMessage(request);
 			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
+				if (args.length == 1) {
+					fullName = null;
+					break;
+				}
 				//String responseStatus = args[0]; //OK
 				//String userEmail = args[1];
 				fullName = args[2];
-					
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			fullName = null;
 			e.printStackTrace();
 		} 
 

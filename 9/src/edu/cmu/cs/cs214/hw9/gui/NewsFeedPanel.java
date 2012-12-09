@@ -3,6 +3,7 @@ package edu.cmu.cs.cs214.hw9.gui;
 import java.awt.Color;
 import java.awt.Dimension;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import java.awt.Font;
@@ -13,7 +14,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.Date;
+import java.util.List;
+
 import javax.swing.JTextField;
+
+import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+import edu.cmu.cs.cs214.hw9.backend.Status;
 
 public class NewsFeedPanel extends JPanel {
 
@@ -21,16 +27,16 @@ public class NewsFeedPanel extends JPanel {
 	 * Create the panel.
 	 */
 	private FacelookAppGUI container;
-	public NewsFeedPanel(String email, FacelookAppGUI a) {
+	public NewsFeedPanel(final String email, final FacelookAppGUI a) {
 		super();
 		container = a;
 		this.setBackground(Color.decode("#3b5998"));
 		this.setPreferredSize(new Dimension(770,539));
 		setLayout(null);
 		
-		String name = "";
-		//GET THE NAME THAT IS TIED TO THE EMAIL ADDRESS
+		ClientHandler ch = new ClientHandler();
 		
+		String name = ch.getUserInfo(email);
 		
 		JLabel lblFacelook = new JLabel("Facelook");
 		lblFacelook.setFont(new Font("Lucida Fax", Font.PLAIN, 32));
@@ -48,7 +54,7 @@ public class NewsFeedPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO FILL IN CODE TO MOVE TO USER'S OWN PROFILE
+				container.replace(new ProfilePanel(email, email, a));
 				
 			}
 			
@@ -67,8 +73,7 @@ public class NewsFeedPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO FILL IN CODE TO MOVE TO USER'S FRIENDS LIST
-				
+				container.replace(new FriendListPanel(email, a));
 			}
 			
 		});
@@ -86,14 +91,22 @@ public class NewsFeedPanel extends JPanel {
 		add(panel);
 		panel.setLayout(new GridLayout(5, 2, 5, 5));
 		
+		List<Status> posts = ch.getFriendUpdates(email);
 		
-		/*
-		 * Fill this GridLayout with StatusPost buttons for the status's
-		 * It is ok to generate this at the beginning and only refresh when coming back to this page. 
-		 * If there are less than 10 then leave the remainder of the grid blank.
-		 */
-		
-		
+		for (Status post : posts) {
+			StatusPost p = new StatusPost(post.getPoster().getFullname(), post.getTimestamp(), post.getMessage());
+			final String friendEmail = post.getPoster().getFullname();
+			p.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					container.replace(new ProfilePanel(friendEmail, email, a));
+				}
+				
+			});
+			
+			panel.add(p);
+		}
 		
 		final JTextField txtExample = new JTextField();
 		txtExample.setText("example@example.com");
@@ -126,9 +139,15 @@ public class NewsFeedPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO GO TO THE USER'S PROFILE THAT IS SEARCHED FOR IN txtExample
-				// JTextField
-				
+				String name = new ClientHandler().getUserInfo(txtExample.getText());
+				if (name != null) {
+					container.replace(new ProfilePanel(txtExample.getText(), email, a));
+				}
+				else {
+					JFrame f = new JFrame();
+					f.add(new JLabel("Unknown User!"));
+					f.setVisible(true);
+				}
 			}
 			
 		});
