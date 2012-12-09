@@ -1,10 +1,14 @@
 package edu.cmu.cs.cs214.hw9.backend;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -15,11 +19,23 @@ public class ClientHandler {
 	private int serverPort;
 	private String server;
 	Socket cSocket;
-	ObjectOutputStream out;
- 	ObjectInputStream in;
+	private BufferedReader reader;
+	private PrintWriter socketWriter;
 	
 	public ClientHandler() {
+		InputStream in = null;
+		OutputStream out = null;
+		try {
+			in = cSocket.getInputStream();
+			out = cSocket.getOutputStream();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
+		reader = new BufferedReader(new InputStreamReader(in));
+		socketWriter = new PrintWriter(out, true);
+
 		chooseServer();
 	}
 	
@@ -138,7 +154,7 @@ public class ClientHandler {
 		String fullName = "";
 		try {
 			sendMessage(request);
-			while ((responseLine = (String)in.readObject() ) != null) {
+			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
 				//String responseStatus = args[0]; //OK
 				//String userEmail = args[1];
@@ -148,10 +164,7 @@ public class ClientHandler {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 
 		closeConnection();
 		
@@ -167,7 +180,7 @@ public class ClientHandler {
 		try {
 			String responseLine;
 			sendMessage(request);
-			while ((responseLine = (String)in.readObject() ) != null) {
+			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
 				String message = args[1];
@@ -178,9 +191,6 @@ public class ClientHandler {
 
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ParseException e) {
@@ -206,7 +216,7 @@ public class ClientHandler {
 		try {
 			String responseLine;
 			sendMessage(request);
-			while ((responseLine = (String)in.readObject() ) != null) {
+			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
 				User u = new User(userEmail, getUserInfo(userEmail), "");
@@ -214,9 +224,6 @@ public class ClientHandler {
 				userList.add(u);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
@@ -267,7 +274,7 @@ public class ClientHandler {
 		try {
 			String responseLine;
 			sendMessage(request);
-			while ((responseLine = (String)in.readObject() ) != null) {
+			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
 				String message = args[1];
@@ -278,9 +285,6 @@ public class ClientHandler {
 			
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ParseException e) {
@@ -304,11 +308,8 @@ public class ClientHandler {
 		String responseLine = "NO RESPONSE";
 		try {
 			sendMessage(request);
-			while ((responseLine = (String)in.readObject() ) != null);
+			while ((responseLine = reader.readLine() ) != null);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -320,20 +321,34 @@ public class ClientHandler {
 	public void openConnection() {
 		try {
 			cSocket = new Socket(InetAddress.getLocalHost(), serverPort);
-			out = new ObjectOutputStream(cSocket.getOutputStream());
-			out.flush();
-			in = new ObjectInputStream(cSocket.getInputStream());
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		InputStream in = null;
+		OutputStream out = null;
+		try {
+			in = cSocket.getInputStream();
+			out = cSocket.getOutputStream();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		reader = new BufferedReader(new InputStreamReader(in));
+		socketWriter = new PrintWriter(out, true);
+
 	}
 	
 	//Close socket
 	public void closeConnection() {
 		try{
-			in.close();
-			out.close();
+			reader.close();
+			socketWriter.close();
 			cSocket.close();
 		}
 		catch(IOException ioException){
@@ -344,13 +359,8 @@ public class ClientHandler {
 	//Send a message to the server
 	public void sendMessage(String msg)
 	{
-		try{
-			out.writeObject(msg);
-			out.flush();
-		}
-		catch(IOException ioException){
-			ioException.printStackTrace();
-		}
+		socketWriter.println(msg);
+		socketWriter.flush();
 	}
 	
 	//Get a server and port from the serverList 
