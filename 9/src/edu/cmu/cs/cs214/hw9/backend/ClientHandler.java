@@ -105,6 +105,21 @@ public class ClientHandler {
 		}
 	}
 	
+	public boolean areFriends(String email1, String email2) {
+		openConnection();
+		String requestType = "ARE_FRIENDS";
+		String request = requestType + "____" + email1 + "____" + email2;
+		String response = handleSimpleMessages(request);
+		closeConnection();
+		
+		if (response.equals("YES")) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
 	public boolean login(String email, String password) {
 		openConnection();
 		String requestType = "LOGIN";
@@ -285,21 +300,6 @@ public class ClientHandler {
 		closeConnection();
 		
 		return statusList;
-	}
-	
-	public boolean areFriends(String email1, String email2) {
-		openConnection();
-		String requestType = "ARE_FRIENDS";
-		String request = requestType + "____" + email1 + "____" + email2;
-		String response = handleSimpleMessages(request);
-		closeConnection();
-		
-		if (response.equals("YES")) {
-			return true;
-		}
-		else {
-			return false;
-		}
 	}
 
 	
