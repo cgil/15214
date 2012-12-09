@@ -14,6 +14,8 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 
+import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+
 public class ProfilePanel extends JPanel {
 
 	private FacelookAppGUI container;
@@ -76,7 +78,14 @@ public class ProfilePanel extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					// TODO FILL IN CODE TO ADD/REMOVE FRIEND
-					
+					/*ClientHandler ch = new ClientHandler();
+					ch.addFriend(emailUser, emailName);
+					if(ch.areFriends(emailUser,emailName)) {
+						ch.removeFriend(emailUser, emailName);
+					}
+					else {
+						ch.addFriend(emailUser, emailName);
+					}*/
 				}
 				
 			});
