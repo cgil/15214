@@ -9,6 +9,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,7 +49,8 @@ public class FriendListPanel extends JPanel {
 		scrollPane1.setViewportView(panel);
 		panel.setLayout(new GridLayout(0, 1, 0, 5));
 		
-		
+		ClientHandler ch = new ClientHandler();
+		List<User> friendRequests = ch.getFriendRequests(email);
 		/*
 		 * Fill this grid with buttons that link to profile pages of people who requested you as a friend i.e.
 		 * JButton link = new JButton("Patrick Woody");
