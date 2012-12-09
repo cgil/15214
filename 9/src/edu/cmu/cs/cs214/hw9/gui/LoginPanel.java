@@ -14,6 +14,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+
 import net.miginfocom.swing.MigLayout;
 
 public class LoginPanel extends JPanel {
@@ -83,9 +85,16 @@ public class LoginPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// TODO FILL THIS IN WITH CODE TO DEAL WITH LOGIN
-				// UPON SUCCESSFUL LOGIN CREATE A FACELOOKAPPGUI JFRAME
-				
+				ClientHandler ch = new ClientHandler();
+				if (ch.login(txtUsername.getText(), txtPassword.getText())) {
+					//login successful
+					FacelookAppGUI newGui = new FacelookAppGUI(txtUsername.getText());
+					newGui.setVisible(true);
+				}
+				else {
+					txtPassword.setText("Password");
+					txtUsername.setText("Email Address");
+				}
 			}
 			
 		});

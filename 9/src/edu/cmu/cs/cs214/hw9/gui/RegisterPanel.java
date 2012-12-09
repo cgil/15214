@@ -16,6 +16,8 @@ import javax.swing.border.EmptyBorder;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.JButton;
 
+import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+
 public class RegisterPanel extends JPanel {
 	private FacelookInitGUI container;
 	/**
@@ -115,9 +117,10 @@ public class RegisterPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// TODO FILL THIS IN WITH REGISTRATION CODE
-				// UPON SUCCESSFUL REGISTRATION EITHER
-				// PROMPT THEM TO LOGIN, OR LOGIN FOR THEM.
+				ClientHandler ch = new ClientHandler();
+				if (ch.register(txtEmail.getText(), txtUsername.getText(), txtPass1.getText())) {
+					container.replace(new LoginPanel(container));
+				}
 			} });
 		//==============================================//
 		

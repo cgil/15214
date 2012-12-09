@@ -3,6 +3,7 @@ package edu.cmu.cs.cs214.hw9.backend;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,7 +18,7 @@ public class ClientHandler {
 	ObjectOutputStream out;
  	ObjectInputStream in;
 	
-	public ClientHandler(String request) {
+	public ClientHandler() {
 		
 		chooseServer();
 	}
@@ -292,7 +293,7 @@ public class ClientHandler {
 	//Open socket and read/write connection
 	public void openConnection() {
 		try {
-			cSocket = new Socket(server, serverPort);
+			cSocket = new Socket(InetAddress.getLocalHost(), serverPort);
 			out = new ObjectOutputStream(cSocket.getOutputStream());
 			out.flush();
 			in = new ObjectInputStream(cSocket.getInputStream());
