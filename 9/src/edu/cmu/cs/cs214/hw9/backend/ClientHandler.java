@@ -328,11 +328,9 @@ public class ClientHandler {
 	
 	//Get a server and port from the serverList 
 	public void chooseServer() {
-		
-		ServerConstants.getServerlist();
-		int serverIndex = (int) (Math.random() * (ServerConstants.getServerlist().length));
-		serverPort = ServerConstants.getServerPort() + serverIndex;
-		server = ServerConstants.getServerlist()[serverIndex]+":"+serverPort;
+		int serverIndex = (int) (Math.random() * (ServerConstants.serverList.length));
+		serverPort = ServerConstants.servePort + serverIndex;
+		server = ServerConstants.serverList[serverIndex]+":"+serverPort;
 
 	}
 

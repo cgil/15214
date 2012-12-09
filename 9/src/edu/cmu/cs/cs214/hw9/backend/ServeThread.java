@@ -21,19 +21,21 @@ public class ServeThread extends Thread {
 	private final Map<String, Integer> userTable;
 	private final int serverID;
 	private final Cache cache;
+	private final Socket s;
 	/**
 	 * Creates a serverThread to handle requests to register or unregister
 	 * @param in The stream from the client
 	 * @param out The stream back to the client
 	 * @param b The database 
 	 */
-	public ServeThread(InputStream in, OutputStream out, Backend b, Map<String, Integer> userTable, int id, Cache c) {
+	public ServeThread(InputStream in, OutputStream out, Backend b, Map<String, Integer> userTable, int id, Cache c, Socket s) {
 		reader = new BufferedReader(new InputStreamReader(in));
 		socketWriter = new PrintWriter(out, true);
 		db = b;
 		this.userTable = userTable;
 		serverID = id;
 		this.cache = c;
+		this.s = s;
 	}
 	
 	/** Reads one line at a time and transfers to the writer */
@@ -55,6 +57,7 @@ public class ServeThread extends Thread {
 			cache.cacheRequest(line, response);
 			
 			socketWriter.print(response);
+			s.close();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -62,7 +65,7 @@ public class ServeThread extends Thread {
 	}
 	
 	private void handleRequest(String line) {
-		String[] args = line.split(" ");
+		String[] args = line.split("____");
 		String requestType = args[0];
 		String email = args[1];
 		
@@ -70,11 +73,11 @@ public class ServeThread extends Thread {
 		if (requestType.equals("REGISTER")) {
 			//REGISTER (email) (username) (password)
 			if (args.length != 4) {
-				writer.println("ERROR BAD_ARGUMENTS");
+				writer.println("ERROR____BAD_ARGUMENTS");
 				return;
 			}
 			if (userTable.get(args[1]) != null) {
-				writer.println("ERROR USER_ALREADY_REGISTERED");
+				writer.println("ERROR____USER_ALREADY_REGISTERED");
 				return;
 			}
 			
@@ -97,7 +100,7 @@ public class ServeThread extends Thread {
 		
 		//Now check if the data requested is stored locally
 		if (userTable.get(email) == null) {
-			writer.println("ERROR UNKNOWN_USER");
+			writer.println("ERROR____UNKNOWN_USER");
 			return;
 		}
 		
@@ -128,13 +131,13 @@ public class ServeThread extends Thread {
 			
 			int requesterID = userTable.get(u2.getEmail());
 			StringWriter responseWriter = new StringWriter();
-			forwardRequestToServer(requesterID, "PENDING_FRIEND_REQUEST " + u2.getEmail() + " " + u.getEmail(), responseWriter);
+			forwardRequestToServer(requesterID, "PENDING_FRIEND_REQUEST____" + u2.getEmail() + "____" + u.getEmail(), responseWriter);
 			
 			String response = responseWriter.toString();
 			if (response.equals("YES")) {
 				//request has been made so just add them as friends
 				db.storeFriend(u, u2);
-				forwardRequestToServer(requesterID, "ADD_FRIEND " + u2.getEmail() + " " + u.getEmail(), new StringWriter());
+				forwardRequestToServer(requesterID, "ADD_FRIEND____" + u2.getEmail() + "____" + u.getEmail(), new StringWriter());
 			}
 			else {
 				List<User> requests = db.getFriendRequests(u);
@@ -163,7 +166,7 @@ public class ServeThread extends Thread {
 
 			if (args[3].equals("CLIENT")) {
 				//make sure the friend link is removed from the other server as well
-				forwardRequestToServer(userTable.get(args[2]), "REMOVE_FRIEND " + args[2] + " " + email + "SERVER", new StringWriter());
+				forwardRequestToServer(userTable.get(args[2]), "REMOVE_FRIEND____" + args[2] + "____" + email + "____SERVER", new StringWriter());
 			}
 			
 			db.removeFriend(u, u2);
@@ -177,7 +180,7 @@ public class ServeThread extends Thread {
 				writer.println("OK");
 			}
 			else {
-				writer.println("ERROR BAD_LOGIN");
+				writer.println("ERROR____BAD_LOGIN");
 			}
 			return;
 		}
@@ -259,11 +262,11 @@ public class ServeThread extends Thread {
 		User u = db.getUser(email);
 		String name = u.getFullname();
 		String pwd = u.getPassword();
-		for (int i = 0; i < ServerConstants.getServerlist().length; i++) {
+		for (int i = 0; i < ServerConstants.serverList.length; i++) {
 			//don't need to notify self
 			if (i == serverID) continue;
 			
-			forwardRequestToServer(i, "NEW_USER " + email + " " + name + " " + pwd + " " + serverID, new StringWriter());
+			forwardRequestToServer(i, "NEW_USER____" + email + "____" + name + "____" + pwd + "____" + serverID, new StringWriter());
 		}
 	}
 
@@ -277,7 +280,7 @@ public class ServeThread extends Thread {
 	 */
 	private void forwardRequestToServer(int destID, String request, Writer responseWriter) {
 		try {
-			Socket requestSock = new Socket(ServerConstants.getServerlist()[destID], ServerConstants.servePort + destID);
+			Socket requestSock = new Socket(ServerConstants.serverList[destID], ServerConstants.servePort + destID);
 			PrintWriter w = new PrintWriter(requestSock.getOutputStream(), true);
 			BufferedReader r = new BufferedReader(new InputStreamReader(requestSock.getInputStream()));
 			w.println(request);
@@ -306,7 +309,7 @@ public class ServeThread extends Thread {
 		ArrayList<Status> allStatus = new ArrayList<Status>();
 		StringWriter w = new StringWriter();
 		
-		forwardRequestToServer(location, "GET_STATUSES " + email, w);
+		forwardRequestToServer(location, "GET_STATUSES____" + email, w);
 		
 		BufferedReader r = new BufferedReader(new StringReader(w.toString()));
 		

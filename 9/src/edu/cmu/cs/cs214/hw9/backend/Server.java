@@ -21,7 +21,7 @@ public class Server extends Thread {
 		c = new Cache();
 		
 		try {
-			sSock = new ServerSocket(ServerConstants.getServerPort() + id);
+			sSock = new ServerSocket(ServerConstants.servePort + id);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -32,8 +32,8 @@ public class Server extends Thread {
 		while (serverOn) {
 			try {
 				Socket sock = sSock.accept();
-				
-				ServeThread t = new ServeThread(sock.getInputStream(), sock.getOutputStream(), localStorage, userTable, id, c);
+				System.out.println("incoming connection to server " + id);
+				ServeThread t = new ServeThread(sock.getInputStream(), sock.getOutputStream(), localStorage, userTable, id, c, sock);
 				t.run();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -47,7 +47,7 @@ public class Server extends Thread {
 	//Main method
 	public static void main(String[] args) {
 		
-		for (int i = 0; i < ServerConstants.getServerlist().length; i ++) {
+		for (int i = 0; i < ServerConstants.serverList.length; i ++) {
 			Server server = new Server(i);
 			server.run();
 		}
