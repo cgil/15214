@@ -79,7 +79,6 @@ public class ProfilePanel extends JPanel {
 				public void actionPerformed(ActionEvent e) {
 					// TODO FILL IN CODE TO ADD/REMOVE FRIEND
 					ClientHandler ch = new ClientHandler();
-					ch.addFriend(emailUser, emailName);
 					if(ch.areFriends(emailUser,emailName)) {
 						ch.removeFriend(emailUser, emailName);
 					}
