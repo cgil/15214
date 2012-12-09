@@ -20,6 +20,7 @@ public class Server extends Thread {
 		userTable = new HashMap<String, Integer>();
 		c = new Cache();
 		
+		System.out.println("Starting server on port " + ServerConstants.servePort + id);
 		try {
 			sSock = new ServerSocket(ServerConstants.servePort + id);
 		} catch (IOException e) {
@@ -33,7 +34,7 @@ public class Server extends Thread {
 			try {
 				Socket sock = sSock.accept();
 				ServeThread t = new ServeThread(sock.getInputStream(), sock.getOutputStream(), localStorage, userTable, id, c, sock);
-				t.run();
+				t.start();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -48,7 +49,7 @@ public class Server extends Thread {
 		
 		for (int i = 0; i < ServerConstants.serverList.length; i ++) {
 			Server server = new Server(i);
-			server.run();
+			server.start();
 		}
 	
 	}

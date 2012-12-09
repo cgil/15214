@@ -50,12 +50,12 @@ public class ServeThread extends Thread {
 				socketWriter.println(cache.getResponseForRequest(line));
 				return;
 			}
-			System.out.println("request = " + line);
+			System.out.println(serverID + ": request = " + line);
 			handleRequest(line);
 			
 			writer.flush();
 			String response = responseHolder.toString();
-			System.out.println("response = " + response);
+			System.out.println(serverID +": response = " + response);
 			cache.cacheRequest(line, response);
 			
 			socketWriter.write(response);
@@ -98,7 +98,7 @@ public class ServeThread extends Thread {
 			//NEW_USER (email) (fullName) (password) (serverID)
 			
 			db.register(new User(email, args[2], args[3]));
-			int serverID = Integer.parseInt(args[2]);
+			int serverID = Integer.parseInt(args[4]);
 			userTable.put(email, serverID);
 			writer.println("OK");
 			return;
@@ -202,6 +202,17 @@ public class ServeThread extends Thread {
 			}
 			return;
 		}
+		else if (requestType.equals("ARE_FRIENDS")) {
+			//ARE_FRIENDS (email1) (email2)
+			User u = db.getUser(email);
+			User u2 = new User(args[2]);
+			if (db.areFriends(u, u2)) {
+				writer.println("YES");
+			}
+			else {
+				writer.println("NO");
+			}
+		}
 		else if (requestType.equals("GET_FRIENDS")) {
 			//GET_FRIENDS (email)
 			User u = db.getUser(email);
@@ -260,6 +271,9 @@ public class ServeThread extends Thread {
 					statArray.add(allStatuses.get(i));
 				}
 				allStatuses = statArray;
+			}
+			else if (allStatuses.size() == 0) {
+				allStatuses.add(new Status("No statuses to display!", u, new Date()));
 			}
 			
 			for (Status s : allStatuses) {

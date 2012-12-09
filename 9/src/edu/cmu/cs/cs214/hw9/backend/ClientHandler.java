@@ -143,15 +143,13 @@ public class ClientHandler {
 		String fullName = "";
 		try {
 			sendMessage(request);
-			while ((responseLine = reader.readLine() ) != null) {
-				String[] args = parseMessage(responseLine);
-				System.out.println(responseLine);
-				if (args[0].equals("ERROR")) {
-					fullName = null;
-					break;
-				}
-				//String responseStatus = args[0]; //OK
-				//String userEmail = args[1];
+			responseLine = reader.readLine();
+			String[] args = parseMessage(responseLine);
+			System.out.println(responseLine);
+			if (args[0].equals("ERROR")) {
+				fullName = null;
+			}
+			else {
 				fullName = args[2];
 			}
 		} catch (IOException e) {
@@ -266,6 +264,7 @@ public class ClientHandler {
 			sendMessage(request);
 			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
+				if (args.length != 3) continue;
 				String userEmail = args[0];
 				String message = args[1];
 				User u = new User(userEmail, getUserInfo(userEmail), "");
@@ -285,6 +284,21 @@ public class ClientHandler {
 		closeConnection();
 		
 		return statusList;
+	}
+	
+	public boolean areFriends(String email1, String email2) {
+		openConnection();
+		String requestType = "ARE_FRIENDS";
+		String request = requestType + "____" + email1 + "____" + email2;
+		String response = handleSimpleMessages(request);
+		closeConnection();
+		
+		if (response.equals("YES")) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	
