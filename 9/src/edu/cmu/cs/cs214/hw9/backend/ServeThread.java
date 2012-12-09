@@ -50,14 +50,16 @@ public class ServeThread extends Thread {
 				socketWriter.println(cache.getResponseForRequest(line));
 				return;
 			}
-			
+			System.out.println("request = " + line);
 			handleRequest(line);
 			
 			writer.flush();
 			String response = responseHolder.toString();
+			System.out.println("response = " + response);
 			cache.cacheRequest(line, response);
 			
-			socketWriter.print(response);
+			socketWriter.write(response);
+			socketWriter.flush();
 			s.close();
 			
 		} catch (IOException e) {
@@ -212,7 +214,7 @@ public class ServeThread extends Thread {
 		else if (requestType.equals("GET_USER_INFO")) {
 			//GET_USER_INFO (email)
 			User u = db.getUser(email);
-			writer.println("OK " + u.getEmail() + u.getFullname());
+			writer.println("OK____" + u.getEmail() + "____" + u.getFullname());
 			return;
 		}
 		else if (requestType.equals("GET_STATUSES")) {

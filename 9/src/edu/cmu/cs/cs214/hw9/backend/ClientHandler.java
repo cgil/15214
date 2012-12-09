@@ -34,7 +34,7 @@ public class ClientHandler {
 		String request = requestType + "____" + email + "____" + name + "____" + password; 
 		String response = handleSimpleMessages(request);	
 		closeConnection();
-		
+		System.out.println("reg response:" +response);
 		if (!response.equals("OK")) {
 			return false;
 		}
@@ -145,7 +145,8 @@ public class ClientHandler {
 			sendMessage(request);
 			while ((responseLine = reader.readLine() ) != null) {
 				String[] args = parseMessage(responseLine);
-				if (args.length == 1) {
+				System.out.println(responseLine);
+				if (args[0].equals("ERROR")) {
 					fullName = null;
 					break;
 				}
@@ -298,7 +299,9 @@ public class ClientHandler {
 		String dummyString;
 		try {
 			sendMessage(request);
-			while ((dummyString = reader.readLine() ) != null);
+			while ((dummyString = reader.readLine() ) != null) {
+				responseLine = dummyString;
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

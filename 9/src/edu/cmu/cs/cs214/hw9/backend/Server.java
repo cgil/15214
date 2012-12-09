@@ -32,7 +32,6 @@ public class Server extends Thread {
 		while (serverOn) {
 			try {
 				Socket sock = sSock.accept();
-				System.out.println("incoming connection to server " + id);
 				ServeThread t = new ServeThread(sock.getInputStream(), sock.getOutputStream(), localStorage, userTable, id, c, sock);
 				t.run();
 			} catch (IOException e) {

@@ -121,6 +121,7 @@ public class RegisterPanel extends JPanel {
 				if (ch.register(txtEmail.getText(), txtUsername.getText(), txtPass1.getText())) {
 					container.replace(new LoginPanel(container));
 				}
+				
 			} });
 		//==============================================//
 		
