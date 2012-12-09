@@ -17,3 +17,5 @@ in ServerConstants.java.
 
 For testing purposes, the servers were set up so that they could all run on the same machine in separate threads. For this reason each thread takes a different port, 
 incrementing the base port by the server ID to get that servers port.
+
+To change the cache size, simply change the CACHE_SIZE variable in Cache.java
