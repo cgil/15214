@@ -10,10 +10,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+import edu.cmu.cs.cs214.hw9.backend.User;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class FriendListPanel extends JPanel {
 
@@ -22,7 +24,7 @@ public class FriendListPanel extends JPanel {
 	 */
 	private FacelookAppGUI container;
 	
-	public FriendListPanel(final String email, FacelookAppGUI a) {
+	public FriendListPanel(final String email, final FacelookAppGUI a) {
 		super();
 		container = a;
 		this.setBackground(Color.decode("#3b5998"));
@@ -51,14 +53,18 @@ public class FriendListPanel extends JPanel {
 		
 		ClientHandler ch = new ClientHandler();
 		List<User> friendRequests = ch.getFriendRequests(email);
-		/*
-		 * Fill this grid with buttons that link to profile pages of people who requested you as a friend i.e.
-		 * JButton link = new JButton("Patrick Woody");
-		 * link.addActionListener(new ActionListener(){ ... });
-		 * panel.add(link);
-		 */
 		
-		
+		for (User u : friendRequests) {
+			JButton link = new JButton(u.getFullname());
+			final User fUser = u;
+			link.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					container.replace(new ProfilePanel(fUser.getEmail(), email, a));
+				}
+			});
+			panel.add(link);
+		}
 		
 		JLabel lblFriends = new JLabel("Friends");
 		lblFriends.setForeground(Color.WHITE);
@@ -74,14 +80,19 @@ public class FriendListPanel extends JPanel {
 		scrollPane.setViewportView(panel_1);
 		panel_1.setLayout(new GridLayout(0, 1, 0, 5));
 		
+		List<User> friends = ch.getFriends(email);
 		
-		/*
-		 * Fill this grid with buttons that link to profile pages i.e.
-		 * JButton link = new JButton("Patrick Woody");
-		 * link.addActionListener(new ActionListener(){ ... });
-		 * panel_1.add(link);
-		 */
-		
+		for (User f : friends) {
+			JButton link = new JButton("Patrick Woody");
+			final User fUser = f;
+			link.addActionListener(new ActionListener(){
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					container.replace(new ProfilePanel(fUser.getEmail(), email, a));
+				} });
+			panel_1.add(link);
+		}
 		
 		
 		JButton btnNewsFeed = new JButton("News Feed");

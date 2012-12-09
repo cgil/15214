@@ -171,7 +171,7 @@ public class ClientHandler {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
 				String message = args[1];
-				User u = new User(userEmail);
+				User u = new User(userEmail, getUserInfo(userEmail), "");
 				Date d = DateFormat.getInstance().parse(args[2]);
 				Status status = new Status(message, u, d);
 				statusList.add(status);
@@ -209,7 +209,7 @@ public class ClientHandler {
 			while ((responseLine = (String)in.readObject() ) != null) {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
-				User u = new User(userEmail);
+				User u = new User(userEmail, getUserInfo(userEmail), "");
 				
 				userList.add(u);
 			}
@@ -226,9 +226,35 @@ public class ClientHandler {
 		return userList;
 	}
 	
-	
-	
-	
+	public ArrayList<User> getFriends(String email) {
+		openConnection();
+		String requestType = "GET_FRIENDS";
+		String request = requestType + "____" + email;
+		
+		ArrayList<User>userList = new ArrayList<User>();
+		
+		try {
+			String responseLine;
+			sendMessage(request);
+			while ((responseLine = (String)in.readObject() ) != null) {
+				String[] args = parseMessage(responseLine);
+				String userEmail = args[0];
+				User u = new User(userEmail, getUserInfo(userEmail), "");
+				
+				userList.add(u);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		closeConnection();
+		
+		return userList;
+	}
 	
 	public ArrayList<Status> getFriendUpdates(String email) {
 		openConnection();
@@ -245,7 +271,7 @@ public class ClientHandler {
 				String[] args = parseMessage(responseLine);
 				String userEmail = args[0];
 				String message = args[1];
-				User u = new User(userEmail);
+				User u = new User(userEmail, getUserInfo(userEmail), "");
 				Date d = DateFormat.getInstance().parse(args[2]);
 				Status status = new Status(message, u, d);
 				statusList.add(status);

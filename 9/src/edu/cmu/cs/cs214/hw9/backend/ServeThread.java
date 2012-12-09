@@ -199,6 +199,15 @@ public class ServeThread extends Thread {
 			}
 			return;
 		}
+		else if (requestType.equals("GET_FRIENDS")) {
+			//GET_FRIENDS (email)
+			User u = db.getUser(email);
+			List<User> friends = db.getFriends(u);
+			
+			for (User f : friends) {
+				writer.println(f.getEmail());
+			}
+		}
 		else if (requestType.equals("GET_USER_INFO")) {
 			//GET_USER_INFO (email)
 			User u = db.getUser(email);
