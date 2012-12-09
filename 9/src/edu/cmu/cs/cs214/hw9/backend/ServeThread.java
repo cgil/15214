@@ -163,6 +163,7 @@ public class ServeThread extends Thread {
 			
 			db.storeFriend(u, u2);
 			
+			
 			writer.println("OK");
 			return;
 		}

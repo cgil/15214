@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -15,13 +16,14 @@ import javax.swing.JButton;
 import javax.swing.JTextField;
 
 import edu.cmu.cs.cs214.hw9.backend.ClientHandler;
+import edu.cmu.cs.cs214.hw9.backend.Status;
 
 public class ProfilePanel extends JPanel {
 
 	private FacelookAppGUI container;
 	private JTextField textField;
 	//emailName is the name of the profile you are viewing, emailUser is the user accessing it
-	public ProfilePanel(final String emailName, final String emailUser, FacelookAppGUI a) {
+	public ProfilePanel(final String emailName, final String emailUser, final FacelookAppGUI a) {
 		super();
 		container = a;
 		this.setBackground(Color.decode("#3b5998"));
@@ -34,12 +36,10 @@ public class ProfilePanel extends JPanel {
 		lblFacelook.setBounds(12, 13, 199, 32);
 		add(lblFacelook);
 		
-		String name = "";
+		ClientHandler chh = new ClientHandler();
+		String name = chh.getUserInfo(emailName);
 		//GET THE NAME THAT IS TIED TO THE EMAIL ADDRESS
 		
-		String username = "";
-		//GET THE USERNAME THAT IS TIED TO THE EMAIL ADDRESS
-
 
 		JLabel nameLabel = new JLabel(name);
 		nameLabel.setForeground(Color.WHITE);
@@ -64,6 +64,28 @@ public class ProfilePanel extends JPanel {
 		 * It is ok to generate this at the beginning and only refresh when coming back to this page. 
 		 * If there are less than 10 then leave the remainder of the grid blank. These don't need to link back to same page.
 		 */
+		List<Status> posts;
+		if(emailUser.equals(emailName)){
+			posts = chh.getFriendUpdates(emailName);
+		}
+		else {
+			posts = chh.getStatuses(emailName);
+		}
+		
+		for (Status post : posts) {
+			StatusPost p = new StatusPost(post.getPoster().getFullname(), post.getTimestamp(), post.getMessage());
+			final String friendEmail = post.getPoster().getFullname();
+			p.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					container.replace(new ProfilePanel(friendEmail, emailUser, a));
+				}
+				
+			});
+			
+			panel.add(p);
+		}
 		
 		
 		if(!emailUser.equals(emailName)){//Only show these when it is not your own profile
@@ -134,7 +156,9 @@ public class ProfilePanel extends JPanel {
 	
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					// TODO HANDLE POSTING OF STATUS
+					ClientHandler ch = new ClientHandler();
+					ch.updateStatus(emailUser, textField.getText());
+					textField.setText("Posted!");
 				}
 				
 			});
